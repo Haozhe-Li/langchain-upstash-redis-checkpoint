@@ -35,9 +35,25 @@ saver = UpstashRedisSaver.from_env()
 # Or pass credentials explicitly:
 saver = UpstashRedisSaver.from_conn_info(url="...", token="...")
 
-graph = builder.compile(checkpointer=saver)
-config = {"configurable": {"thread_id": "thread-1"}}
-graph.invoke(inputs, config)
+# use checkpoint in an agent
+from langchain.agents import create_agent
+
+agent = create_agent(model="groq:openai/gpt-oss-120b", checkpointer=saver)
+
+thread_config = {"configurable": {"thread_id": "1"}}
+response = agent.invoke(
+    {"messages": [{"role": "user", "content": "what is my name?"}]},
+    thread_config,
+)["messages"][-1].content
+
+print(response) # Hello, Bob! Nice to meet you. How can I help you today?
+
+response = agent.invoke(
+    {"messages": [{"role": "user", "content": "what is my name?"}]},
+    thread_config,
+)["messages"][-1].content
+
+print(response) # You mentioned that your name is **Bob**.
 ```
 
 ### Async
@@ -45,10 +61,25 @@ graph.invoke(inputs, config)
 ```python
 from langgraph.checkpoint.upstash_redis.aio import AsyncUpstashRedisSaver
 
-saver = AsyncUpstashRedisSaver.from_env()
-graph = builder.compile(checkpointer=saver)
-config = {"configurable": {"thread_id": "thread-1"}}
-await graph.ainvoke(inputs, config)
+# use checkpoint in an agent
+from langchain.agents import create_agent
+
+agent = create_agent(model="groq:openai/gpt-oss-120b", checkpointer=saver)
+
+thread_config = {"configurable": {"thread_id": "1"}}
+response = await agent.ainvoke(
+    {"messages": [{"role": "user", "content": "what is my name?"}]},
+    thread_config,
+)["messages"][-1].content
+
+print(response) # Hello, Bob! Nice to meet you. How can I help you today?
+
+response = await agent.ainvoke(
+    {"messages": [{"role": "user", "content": "what is my name?"}]},
+    thread_config,
+)["messages"][-1].content
+
+print(response) # You mentioned that your name is **Bob**.
 ```
 
 Use `AsyncUpstashRedisSaver` with `graph.ainvoke`/`astream`/etc.; use `UpstashRedisSaver`
